@@ -34,10 +34,6 @@ export class productDto extends BaseDataDto {
     @Type(() => Number)
     amount: number;
 
-    @ApiProperty()
-    @IsNumber()
-    @Type(() => Number)
-    price_sale: number;
 
     @ApiProperty()
     @IsString()

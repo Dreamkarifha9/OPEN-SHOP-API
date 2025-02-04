@@ -85,7 +85,6 @@ model Product {
   category_id String
   created_at  DateTime        @default(now())
   created_by  String
-  price_sale  Float
   updated_at  DateTime        @updatedAt
   updated_by  String
   user_id     String

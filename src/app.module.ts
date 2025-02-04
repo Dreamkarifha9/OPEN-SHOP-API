@@ -10,11 +10,12 @@ import { CategoryModule } from './category/category.module';
 import { ProductImageModule } from './product-image/product-image.module';
 import { ProductOnOrderModule } from './product-on-order/product-on-order.module';
 import { CloudinaryModule } from './cloundinary/cloundinary.module';
+import { GpuModule } from './gpu/gpu.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
-  }), UsersModule, AuthModule, ProductsModule, CategoryModule, ProductImageModule, ProductOnOrderModule, CloudinaryModule],
+  }), UsersModule, AuthModule, ProductsModule, CategoryModule, ProductImageModule, ProductOnOrderModule, CloudinaryModule, GpuModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
