@@ -27,7 +27,7 @@ export class ProductsController {
     @Usr() user: AuthUser,
   ) {
     Logger.log(`User ${JSON.stringify(user)}`);
-    return this.productsService.findAll(query);
+    return this.productsService.findAll(query, user);
   }
 
 
@@ -47,8 +47,8 @@ export class ProductsController {
 
   @Post('')
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createRequest: CreateProductDto, @Usr() user: AuthUser,): Promise<void> {
-    await this.productsService.create(createRequest, user);
+  async create(@Body() createRequest: CreateProductDto, @Usr() user: AuthUser) {
+    return await this.productsService.create(createRequest, user);
   }
 
   @Put(':id')

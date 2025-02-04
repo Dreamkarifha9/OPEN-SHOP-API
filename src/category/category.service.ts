@@ -117,8 +117,8 @@ export class CategoryService {
                 ...createRequest,
                 created_by: authUser.id,
                 created_at: new Date(),
-                updated_by: null, // Ensure updated_by is provided
-                updated_at: null,  // Ensure updated_at is provided
+                updated_by: authUser.id, // Ensure updated_by is provided
+                updated_at: new Date(),
             },
             select: {
                 id: true,

@@ -46,8 +46,9 @@ async function bootstrap() {
 
   // เปิดใช้งาน CORS
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGINS', '*').split(','),
-    credentials: true,
+    origin: '*', // ✅ อนุญาตให้ทุกโดเมนเข้าถึง (ควรใช้เฉพาะ DEV)
+    credentials: true, // ✅ อนุญาตส่ง Cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // ✅ อนุญาตเฉพาะ Method ที่ต้องการ
   });
   await app.register(multipart);
   await app.startAllMicroservices();

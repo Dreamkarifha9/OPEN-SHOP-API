@@ -45,50 +45,97 @@ model students_courses {
   @@id([course_id, student_id])
 }
 
-model users {
-  id         String     @id
-  user_name  String
+model Users {
+  id         String    @id
   password   String?
   email      String
+  salt       String?
+  active     Boolean   @default(true)
+  deleted    Boolean   @default(false)
+  created_at DateTime  @default(now())
+  created_by String
+  updated_at DateTime  @updatedAt
+  updated_by String
   first_name String
   last_name  String
-  salt       String?
-  active     Boolean    @default(true)
-  deleted    Boolean    @default(false)
-  updated_at DateTime?
-  created_at DateTime?  @default(now())
-  created_by String?
-  updated_by String?
-  products   products[]
+  user_name  String
+  products   Product[]
 }
 
-model categories {
-  id         String     @id
+model Categories {
+  id         String    @id
   name       String
-  created_at DateTime?  @default(now())
-  created_by String?
-  updated_by String?
-  updated_at DateTime?
-  deleted    Boolean    @default(false)
-  active     Boolean    @default(true)
-  products   products[]
+  deleted    Boolean   @default(false)
+  active     Boolean   @default(true)
+  created_at DateTime  @default(now())
+  created_by String
+  updated_at DateTime  @updatedAt
+  updated_by String
+  products   Product[]
 }
 
-model products {
-  id          String     @id
+model Product {
+  id          String          @id @default(uuid())
   name        String
-  description String
   price       Float
-  category_id String
-  user_id     String
-  created_at  DateTime?  @default(now())
-  created_by  String?
-  updated_by  String?
-  updated_at  DateTime?
-  deleted     Boolean    @default(false)
-  active      Boolean    @default(true)
-  price_sale  Float
   sn          String
-  categories  categories @relation(fields: [category_id], references: [id])
-  users       users      @relation(fields: [user_id], references: [id])
+  active      Boolean
+  deleted     Boolean
+  description String
+  category_id String
+  created_at  DateTime        @default(now())
+  created_by  String
+  price_sale  Float
+  updated_at  DateTime        @updatedAt
+  updated_by  String
+  user_id     String
+  amount      Int             @default(0)
+  categories  Categories      @relation(fields: [category_id], references: [id])
+  user        Users           @relation(fields: [user_id], references: [id])
+  images      ProductImage[]
+  order       ProductOnOrder?
+}
+
+model ProductOnOrder {
+  id         String   @id @default(uuid())
+  product_id  String   @unique
+  shipping   Float
+  amount     Float
+  total_price Float
+  active     Boolean
+  deleted    Boolean
+  created_at DateTime @default(now())
+  created_by String
+  updated_at DateTime @updatedAt
+  updated_by String
+  product    Product  @relation(fields: [product_id], references: [id])
+}
+
+model ProductImage {
+  id         String   @id @default(uuid())
+  product_id  String
+  image_key   String
+  url        String
+  active     Boolean
+  deleted    Boolean
+  created_at DateTime @default(now())
+  created_by String
+  updated_at DateTime @updatedAt
+  updated_by String
+  product    Product  @relation(fields: [product_id], references: [id])
+}
+
+
+model Gpu {
+  id            Int     @id @default(autoincrement())
+  manufacturer  String
+  model         String
+  series        String
+  release_year  Int
+  architecture  String
+  memory_size   Int
+  memory_type   String
+  core_clock    Int
+  boost_clock   Int
+  cuda_cores    Int
 }

@@ -11,7 +11,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 @Injectable()
 export class ProductsService {
     constructor(private readonly prisma: PrismaService) { }
-    async findAll(search: SearchProduct): Promise<ProductsDto> {
+    async findAll(search: SearchProduct, authUser: AuthUser): Promise<ProductsDto> {
         const { page, size, query, active, deleted, sortBy, orderBy, name } = search;
 
         const skip = (page - 1) * size;  // Calculate skip value
@@ -39,13 +39,16 @@ export class ProductsService {
             where.name = { contains: name, mode: 'insensitive' };
         }
 
+        where.user_id = authUser.id;
+
         // Sorting
         const orderByField = sortBy || 'id';
         const orderDirection = orderBy?.toLowerCase() === 'desc' ? 'desc' : 'asc';
-
+        Logger.debug(`where: ${JSON.stringify(where)}`);
         // Query data and count
         const [data, count] = await Promise.all([
-            this.prisma.products.findMany({
+
+            this.prisma.product.findMany({
                 where,
                 skip: skip,  // Ensure skip is properly passed
                 take: take,  // Ensure take is properly passed
@@ -59,18 +62,26 @@ export class ProductsService {
                     deleted: true,
                     category_id: true,
                     user_id: true,
+                    amount: true,
                     created_at: true,
                     created_by: true,
                     updated_at: true,
                     updated_by: true,
+                    images: {
+                        select: {
+                            id: true,
+                            url: true,
+                            product_id: true,
+                        },
+                    },
                 },
             }),
-            this.prisma.categories.count({ where }),  // Count total records
+            this.prisma.product.count({ where }),  // Count total records
         ]);
 
         // Transform data and create response
-        const newData = plainToInstance(productDto, data as productDto[]);
-
+        const newData = plainToInstance(productDto, data as any[]);
+        // Logger.debug(`newData: ${JSON.stringify(newData)}`);
         const result = new ProductsDto();
         result.currentPage = page;
         result.total = count;
@@ -85,7 +96,7 @@ export class ProductsService {
 
 
     async findOne(id: string): Promise<productDto> {
-        const product = await this.prisma.products.findFirst({
+        const product = await this.prisma.product.findFirst({
             where: { id },
             select: {
                 id: true,
@@ -98,6 +109,7 @@ export class ProductsService {
                 deleted: true,
                 category_id: true,
                 user_id: true,
+                amount: true,
                 created_at: true,
                 created_by: true,
                 updated_at: true,
@@ -112,10 +124,10 @@ export class ProductsService {
         return product;
     }
 
-    async create(createRequest: CreateProductDto, authUser: AuthUser) {
 
-        // Check for duplicate name
-        const existingProduct = await this.prisma.categories.findFirst({
+    async create(createRequest: CreateProductDto, authUser: AuthUser) {
+        // Check for duplicate name in "products" (not "categories")
+        const existingProduct = await this.prisma.product.findFirst({
             where: { name: createRequest.name },
         });
 
@@ -123,15 +135,26 @@ export class ProductsService {
             throw new ConflictException('Product with this name already exists');
         }
 
-        const newProduct: CreateProductDto = await this.prisma.products.create({
+        // Ensure `category_id` and `user_id` are correct types (UUID strings)
+        const newProduct = await this.prisma.product.create({
             data: {
-                id: uuid.v4(),
-                ...createRequest,
-                user_id: authUser.id,
-                created_by: authUser.id,
+                id: uuid.v4(), // Generate UUID
+                name: createRequest.name,
+                description: createRequest.description,
+                price: createRequest.price,
+                price_sale: createRequest.price_sale,
+                sn: createRequest.sn,
+                active: createRequest.active ?? true,
+                deleted: createRequest.deleted ?? false,
                 created_at: new Date(),
-                updated_by: null, // Ensure updated_by is provided
-                updated_at: null,  // Ensure updated_at is provided
+                created_by: authUser.id, // Ensure it's a string (UUID)
+                category_id: createRequest.category_id, // Nullable
+                user_id: authUser.id, // Ensure it's a UUID string
+                // Prisma automatically updates `updated_at`, so omit `null`
+                updated_by: authUser.id,
+                updated_at: new Date(),
+                amount: createRequest.amount,
+
             },
             select: {
                 id: true,
@@ -144,14 +167,20 @@ export class ProductsService {
                 user_id: true,
                 created_at: true,
                 created_by: true,
-                updated_at: true,
-                updated_by: true,
-            },
+                updated_at: true, // Prisma auto-handles this
+                updated_by: true, // Nullable
+
+                // Do not explicitly set `null` for relations; just omit them.
+                user: false,
+                categories: false,
+                images: false,
+                order: false,
+            }
         });
 
         return newProduct;
-
     }
+
     async update(
         productId: string,
         updateRequest: UpdateProductDto,
@@ -167,7 +196,7 @@ export class ProductsService {
         }
 
         try {
-            const updatedUser: productDto = await this.prisma.products.update({
+            const updatedUser: productDto = await this.prisma.product.update({
                 where: { id: productId },
                 data: {
                     ...updateRequest,
@@ -183,6 +212,7 @@ export class ProductsService {
                     description: true,
                     category_id: true,
                     user_id: true,
+                    amount: true,
                     created_at: true,
                     created_by: true,
                     updated_at: true,

@@ -71,3 +71,10 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+## Prisma
+
+-alter add column
+npx prisma migrate dev --name delete_age_column
+
+> npx prisma migrate
